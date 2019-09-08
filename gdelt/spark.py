@@ -5,7 +5,7 @@ from pyspark.sql import functions as Func
 from pyspark.sql import SQLContext
 from pyspark.sql import SparkSession
 from pyspark.sql import DataFrameWriter
-from . import schema
+import schema
 
 
 POSTGRES_HOST = os.getenv('POSTGRES_HOST', '0.0.0.0')
@@ -102,9 +102,9 @@ def spark_sql(app=None, mem='6gb'):
     spark = SparkSession.builder.appName(app).config('spark.executor.memory', mem).getOrCreate()
     sc = spark.sparkContext
     hadoop_conf = sc._jsc.hadoopConfiguration()
-    hadoop_conf.set('fs.s3n.impl', 'org.apache.hadoop.fs.s3native.NativeS3FileSystem')
-    hadoop_conf.set('fs.s3n.awsAccessKeyId', access_id)
-    hadoop_conf.set('fs.s3n.awsSecretAccessKey', access_key)
+    hadoop_conf.set('fs.s3a.impl', 'org.apache.hadoop.fs.s3a.S3AFileSystem')
+    hadoop_conf.set('fs.s3a.awsAccessKeyId', access_id)
+    hadoop_conf.set('fs.s3a.awsSecretAccessKey', access_key)
 
     for dirpath, dirnames, filenames in os.walk(os.path.dirname(os.path.realpath(__file__))):
         for file in filenames:
@@ -115,8 +115,8 @@ def spark_sql(app=None, mem='6gb'):
 
 
 def process_events(date):
-    source = 's3://gdelt-dataharbor/eventfiles/event.2/{}*.export.CSV'.format(date)
-    df = spark_sql(app='clean-event-data').read \
+    source = 's3a://gdelt-dataharbor/eventfiles/event.2/{}*.export.CSV'.format(date)
+    df = spark_sql(app='process-event-data').read \
         .format('com.databricks.spark.csv') \
         .options(header='false') \
         .options(delimiter='\t') \
@@ -127,8 +127,8 @@ def process_events(date):
 
 
 def process_mentions(date):
-    source = 's3://gdelt-dataharbor/eventfiles/event.2/{}*'.format(date)
-    target = 's3://xxxx/airflow-mentions-parquet-{}/'.format(date)
+    source = 's3a://gdelt-dataharbor/eventfiles/event.2/{}*'.format(date)
+    target = 's3a://gdelt-dataharbor/eventfiles/event.2/parquet-{}/'.format(date)
     spark_sql(app='clean-mentions-data').read \
         .format('com.databricks.spark.csv') \
         .options(header='false') \
@@ -141,6 +141,8 @@ def process_mentions(date):
 if __name__ == '__main__':
     cmd = str(sys.argv[1])
     date = str(sys.argv[2])
+    print(f'Processing data. Process command: {cmd}, date: {date}')
+
     if cmd == 'events':
         process_events(date)
     elif cmd == 'mentions':
