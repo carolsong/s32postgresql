@@ -16,7 +16,7 @@ POSTGRES_PWD = os.getenv('POSTGRES_PWD', 'password')
 POSTGRES_URL = f'jdbc:postgresql://{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}'
 
 
-def write_dataframe_to_postgres(df, table: str, mode):
+def write_dataframe_to_postgres(df, table, mode):
     DataFrameWriter(df).jdbc(POSTGRES_URL, table, mode, {
         'user': POSTGRES_USER,
         'password': POSTGRES_PWD,
@@ -24,7 +24,7 @@ def write_dataframe_to_postgres(df, table: str, mode):
     })
 
 
-def write_events_to_postgres(file: str):
+def write_events_to_postgres(file):
     df = spark_sql(app="store-events-to-db").read.parquet(file)
 
     df = df.withColumn('GLOBALEVENTID', df.GLOBALEVENTID.cast('INT'))
@@ -93,7 +93,7 @@ def write_events_to_postgres(file: str):
     write_dataframe_to_postgres(df, 'events', 'append')
 
 
-def spark_sql(app: str = None, mem: str = '6gb'):
+def spark_sql(app=None, mem='6gb'):
     config = configparser.ConfigParser()
     config.read(os.path.expanduser('~/.aws/credentials'))
     access_id = config.get('default', 'aws_access_key_id')
@@ -105,11 +105,16 @@ def spark_sql(app: str = None, mem: str = '6gb'):
     hadoop_conf.set('fs.s3n.impl', 'org.apache.hadoop.fs.s3native.NativeS3FileSystem')
     hadoop_conf.set('fs.s3n.awsAccessKeyId', access_id)
     hadoop_conf.set('fs.s3n.awsSecretAccessKey', access_key)
+
+    for dirpath, dirnames, filenames in os.walk(os.path.dirname(os.path.realpath(__file__))):
+        for file in filenames:
+            if file.endswith('.py'):
+                sc.addPyFile(os.path.join(dirpath, file))
+
     return SQLContext(sc)
 
 
-def clean_events():
-    date = str(sys.argv[1])
+def process_events(date):
     source = 's3://gdelt-dataharbor/eventfiles/event.2/{}*.export.CSV'.format(date)
     df = spark_sql(app='clean-event-data').read \
         .format('com.databricks.spark.csv') \
@@ -121,10 +126,9 @@ def clean_events():
     write_dataframe_to_postgres(df, 'events', 'append')
 
 
-def clean_mentions():
-    date = str(sys.argv[1])
-    source = 's3a://gdelt-open-data/v2/mentions/{}*'.format(date)
-    target = 's3a://joy-travel-safe-bucket/airflow-mentions-parquet-{}/'.format(date)
+def process_mentions(date):
+    source = 's3://gdelt-dataharbor/eventfiles/event.2/{}*'.format(date)
+    target = 's3://xxxx/airflow-mentions-parquet-{}/'.format(date)
     spark_sql(app='clean-mentions-data').read \
         .format('com.databricks.spark.csv') \
         .options(header='false') \
@@ -134,3 +138,12 @@ def clean_mentions():
         .write.parquet(target)
 
 
+if __name__ == '__main__':
+    cmd = str(sys.argv[1])
+    date = str(sys.argv[2])
+    if cmd == 'events':
+        process_events(date)
+    elif cmd == 'mentions':
+        process_mentions(date)
+    else:
+        raise Exception("invalid command: {}".format(cmd))
