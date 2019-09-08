@@ -12,6 +12,8 @@ export POSTGRES_PORT='5432'
 export POSTGRES_USER='user'
 export POSTGRES_PWD='password'
 
+export PYSPARK_PYTHON=/usr/bin/python3
+
 echo "PATH[spark.sh]: $PROJECT_DIR/spark.sh"
 
 SPARK_MASTER=spark://52.11.103.75:7077
