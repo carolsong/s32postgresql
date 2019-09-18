@@ -114,16 +114,17 @@ def spark_sql(app=None, mem='6gb'):
     return SQLContext(sc)
 
 
-def process_events(date):
-    source = 's3a://gdelt-dataharbor/eventfiles/event.2/{}*.export.CSV'.format(date)
-    df = spark_sql(app='process-event-data').read \
+def process_events():
+    source = 's3a://data-harbor/safetyinfo/sf/2018_to_Present.csv'
+    df = spark_sql(app='process-incident-data').read \
         .format('com.databricks.spark.csv') \
-        .options(header='false') \
+        .options(header='true') \
         .options(delimiter='\t') \
-        .load(source, schema=schema.GDELTDataSchema().getEventSchema()) \
-        .filter('ActionGeo_Type=3 or ActionGeo_Type=4') \
-        .select('GLOBALEVENTID', 'MonthYear', 'Year', 'Actor1Geo_FullName', 'Actor2Geo_FeatureID', 'AvgTone')
-    write_dataframe_to_postgres(df, 'events', 'append')
+        .load(source, schema=schema.IncidentSchema().getIncidentSchema()) \
+        .select('incident_datetime', 'incident_date', 'incident_time', 'incident_year', 'incident_day_of_week', 'incident_id',
+                'incident_category', 'incident_subcategory', 'incident_description', 'resolution',
+                'analysis_neighborhood', 'latitude', 'longitude', 'point')
+    write_dataframe_to_postgres(df, 'INCIDENT', 'append')
 
 
 def process_mentions(date):
@@ -139,13 +140,14 @@ def process_mentions(date):
 
 
 if __name__ == '__main__':
-    cmd = str(sys.argv[1])
-    date = str(sys.argv[2])
-    print(f'Processing data. Process command: {cmd}, date: {date}')
+    process_events()
+    #cmd = str(sys.argv[1])
+    #date = str(sys.argv[2])
+    #print(f'Processing data. Process command: {cmd}, date: {date}')
 
-    if cmd == 'events':
-        process_events(date)
-    elif cmd == 'mentions':
-        process_mentions(date)
-    else:
-        raise Exception("invalid command: {}".format(cmd))
+    #if cmd == 'events':
+     #   process_events(date)
+    #elif cmd == 'mentions':
+     #   process_mentions(date)
+    #else:
+     #   raise Exception("invalid command: {}".format(cmd))
