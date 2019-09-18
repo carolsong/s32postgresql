@@ -1,6 +1,8 @@
+import os
 from flask import Flask, render_template
 
-app = Flask(__name__, template_folder='../pages/templates')
+_file_dir = os.path.dirname(os.path.realpath(__file__))
+app = Flask(__name__, template_folder=os.path.join(_file_dir, "templates"))
 
 
 @app.route('/')
