@@ -5,7 +5,7 @@ class IncidentSchema(object):
 
     def getIncidentSchema(self):
         incidentSchema = StructType([
-            StructField('incidntnum',StringType(),True),
+            StructField('incident_datetime',StringType(),True),
             StructField('incident_date',StringType(),True),
             StructField('incident_time',StringType(),True),
             StructField('incident_year',StringType(),True),
