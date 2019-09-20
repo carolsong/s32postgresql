@@ -37,67 +37,24 @@ def write_dataframe_to_postgres(df, table, mode):
         'driver': 'org.postgresql.Driver'
     })
 
+def write_dataframe_to_postgres2(df, table, mode):
+    #print(f'postgres url: {POSTGRES_URL}')
+    df = df.withColumn('listing_id', df.listing_id.cast('INT'))
+    df = df.withColumn('id', df.id.cast('INT'))
+    df = df.withColumn('date', Func.to_timestamp(df.date, format='YYYY-MM-DD'))
+    df = df.withColumn('reviewer_id', df.reviewer_id.cast('INT'))
+    df = df.withColumn('reviewer_name', df.reviewer_name.cast('STRING'))
+    df = df.withColumn('comments', df.comments.cast('STRING'))
+    #df = df.withColumn('tone', 0.0)
+
+    DataFrameWriter(df).jdbc(POSTGRES_URL, table, mode, {
+        'user': POSTGRES_USER,
+        'password': POSTGRES_PWD,
+        'driver': 'org.postgresql.Driver'
+    })
+
 def write_events_to_postgres(file):
     df = spark_sql(app="store-events-to-db").read.parquet(file)
-
-    df = df.withColumn('GLOBALEVENTID', df.GLOBALEVENTID.cast('INT'))
-    df = df.withColumn('SQLDATE', Func.to_timestamp(df.SQLDATE, format='YYYY-MM-DD HH24:MI:SS'))
-    df = df.withColumn('MonthYear', df.MonthYear.cast('INT'))
-    df = df.withColumn('Month', Func.month(df.SQLDATE))
-    df = df.withColumn('Year', df.Year.cast('INT'))
-    df = df.withColumn('Actor1Code', df.Actor1Code.cast('STRING'))
-    df = df.withColumn('Actor1Name', df.Actor1Name.cast('STRING'))
-    df = df.withColumn('Actor1CountryCode', df.Actor1CountryCode.cast('STRING'))
-    df = df.withColumn('Actor1KnownGroupCode', df.Actor1KnownGroupCode.cast('STRING'))
-    df = df.withColumn('Actor1EthnicCode', df.Actor1EthnicCode.cast('STRING'))
-    df = df.withColumn('Actor1Religion1Code', df.Actor1Religion1Code.cast('STRING'))
-    df = df.withColumn('Actor1Religion2Code', df.Actor1Religion2Code.cast('STRING'))
-    df = df.withColumn('Actor1Type1Code', df.Actor1Type1Code.cast('STRING'))
-    df = df.withColumn('Actor1Type2Code', df.Actor1Type2Code.cast('STRING'))
-    df = df.withColumn('Actor1Type3Code', df.Actor1Type3Code.cast('STRING'))
-    df = df.withColumn('Actor2Code', df.Actor2Code.cast('STRING'))
-    df = df.withColumn('Actor2Name', df.Actor2Name.cast('STRING'))
-    df = df.withColumn('Actor2CountryCode', df.Actor2CountryCode.cast('STRING'))
-    df = df.withColumn('Actor2KnownGroupCode', df.Actor2KnownGroupCode.cast('STRING'))
-    df = df.withColumn('Actor2EthnicCode', df.Actor2EthnicCode.cast('STRING'))
-    df = df.withColumn('Actor2Religion1Code', df.Actor2Religion1Code.cast('STRING'))
-    df = df.withColumn('Actor2Religion2Code', df.Actor2Religion2Code.cast('STRING'))
-    df = df.withColumn('Actor2Type1Code', df.Actor2Type1Code.cast('STRING'))
-    df = df.withColumn('Actor2Type2Code', df.Actor2Type2Code.cast('STRING'))
-    df = df.withColumn('Actor2Type3Code', df.Actor2Type3Code.cast('STRING'))
-    df = df.withColumn('IsRootEvent', df.IsRootEvent.cast('INT'))
-    df = df.withColumn('EventCode', df.EventCode.cast('STRING'))
-    df = df.withColumn('EventBaseCode', df.EventBaseCode.cast('STRING'))
-    df = df.withColumn('EventRootCode', df.EventRootCode.cast('STRING'))
-    df = df.withColumn('QuadClass', df.QuadClass.cast('INT'))
-    df = df.withColumn('GoldsteinScale', df.GoldsteinScale.cast('FLOAT'))
-    df = df.withColumn('NumMentions', df.NumMentions.cast('INT'))
-    df = df.withColumn('NumSources', df.NumSources.cast('INT'))
-    df = df.withColumn('NumArticles', df.NumArticles.cast('INT'))
-    df = df.withColumn('AvgTone', df.AvgTone.cast('FLOAT'))
-    df = df.withColumn('Actor1Geo_Type', df.Actor1Geo_Type.cast('INT'))
-    df = df.withColumn('Actor1Geo_FullName', df.Actor1Geo_FullName.cast('STRING'))
-    df = df.withColumn('Actor1Geo_CountryCode', df.Actor1Geo_CountryCode.cast('STRING'))
-    df = df.withColumn('Actor1Geo_ADM1Code', df.Actor1Geo_ADM1Code.cast('STRING'))
-    df = df.withColumn('Actor1Geo_ADM2Code', df.Actor1Geo_ADM2Code.cast('STRING'))
-    df = df.withColumn('Actor1Geo_Lat', df.Actor1Geo_Lat.cast('FLOAT'))
-    df = df.withColumn('Actor1Geo_Long', df.Actor1Geo_Long.cast('FLOAT'))
-    df = df.withColumn('Actor1Geo_FeatureID', df.Actor1Geo_FeatureID.cast('STRING'))
-    df = df.withColumn('Actor2Geo_Type', df.Actor2Geo_Type.cast('INT'))
-    df = df.withColumn('Actor2Geo_FullName', df.Actor2Geo_FullName.cast('STRING'))
-    df = df.withColumn('Actor2Geo_CountryCode', df.Actor2Geo_CountryCode.cast('STRING'))
-    df = df.withColumn('Actor2Geo_ADM1Code', df.Actor2Geo_ADM1Code.cast('STRING'))
-    df = df.withColumn('Actor2Geo_ADM2Code', df.Actor2Geo_ADM2Code.cast('STRING'))
-    df = df.withColumn('Actor2Geo_Lat', df.Actor2Geo_Lat.cast('FLOAT'))
-    df = df.withColumn('Actor2Geo_Long', df.Actor2Geo_Long.cast('FLOAT'))
-    df = df.withColumn('Actor2Geo_FeatureID', df.Actor2Geo_FeatureID.cast('STRING'))
-    df = df.withColumn('ActionGeo_Type', df.ActionGeo_Type.cast('INT'))
-    df = df.withColumn('ActionGeo_FullName', df.ActionGeo_FullName.cast('STRING'))
-    df = df.withColumn('ActionGeo_CountryCode', df.ActionGeo_CountryCode.cast('STRING'))
-    df = df.withColumn('ActionGeo_ADM1Code', df.ActionGeo_ADM1Code.cast('STRING'))
-    df = df.withColumn('ActionGeo_ADM2Code', df.ActionGeo_ADM2Code.cast('STRING'))
-    df = df.withColumn('ActionGeo_Lat', df.ActionGeo_Lat.cast('FLOAT'))
-    df = df.withColumn('ActionGeo_Long', df.ActionGeo_Long.cast('FLOAT'))
     df = df.withColumn('ActionGeo_FeatureID', df.ActionGeo_FeatureID.cast('STRING'))
     df = df.withColumn('SOURCEURL', df.SOURCEURL.cast('STRING'))
 
@@ -134,12 +91,28 @@ def process_events():
         .format('com.databricks.spark.csv') \
         .options(header='true') \
         .options(delimiter=',') \
+        .option("quote", "\"")  \
+        .option("escape", "\"") \
         .load(source, schema=schema.IncidentSchema().getIncidentSchema()) \
         .select('incident_datetime', 'incident_date', 'incident_time', 'incident_year', 'incident_day_of_week', 'incident_id',
                 'incident_category', 'incident_subcategory', 'incident_description', 'resolution',
                 'analysis_neighborhood', 'latitude', 'longitude')
 
     write_dataframe_to_postgres(df, 'INCIDENT3', 'append')
+
+def process_airreview():
+    source = 's3a://data-harbor/airbnb/sanfrancisco/reviews10.csv'
+    #target = 's3a://data-harbor/airbnb/event.2/parquet'
+    df = spark_sql(app='process-review-data').read \
+        .format('com.databricks.spark.csv') \
+        .options(header='true') \
+        .options(delimiter=',') \
+        .options(quote='"')  \
+        .options(escape='"')    \
+        .load(source, schema=schema.IncidentSchema().getAirReviewSchema()) \
+        .select('listing_id', 'id', 'date', 'reviewer_id', 'reviewer_name', 'comments')
+
+    write_dataframe_to_postgres2(df, 'AIRREVIEW', 'append')
 
 # df = spark_sql(app='process-incident-data').read \
     #     .format('com.databricks.spark.csv') \
@@ -163,14 +136,15 @@ def process_events():
 
 
 if __name__ == '__main__':
-    process_events()
+    #process_events()
+    process_airreview()
     #cmd = str(sys.argv[1])
     #date = str(sys.argv[2])
     #print(f'Processing data. Process command: {cmd}, date: {date}')
 
-    #if cmd == 'events':
-     #   process_events(date)
-    #elif cmd == 'mentions':
-     #   process_mentions(date)
+    #if cmd == 'incident':
+    #    process_events()
+    #elif cmd == 'review':
+     #   process_airreview()
     #else:
      #   raise Exception("invalid command: {}".format(cmd))
