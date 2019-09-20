@@ -36,7 +36,7 @@ INCIDENT_SCHEMA = StructType([
 
 def process():
     source = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../data/sf_incidents.csv")
-    target = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../data/sf_incidents_recent.json")
+    target = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../data/sf_incidents_recent.csv")
     spark = SparkSession.builder.appName('process-incident-data').getOrCreate()
     df = spark.read.format('com.databricks.spark.csv') \
         .options(header='true') \
@@ -52,7 +52,7 @@ def process():
             AND latitude != ''
             AND longitude != ''
     """
-    spark.sql(sql).coalesce(1).write.json(target)
+    spark.sql(sql).coalesce(1).write.csv(target)
 
 
 if __name__ == '__main__':
