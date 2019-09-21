@@ -1,11 +1,11 @@
 import os
-import sys
 import configparser
+import schema
+
 from pyspark.sql import functions as Func
 from pyspark.sql import SQLContext
 from pyspark.sql import SparkSession
 from pyspark.sql import DataFrameWriter
-import schema
 
 
 POSTGRES_HOST = os.getenv('POSTGRES_HOST', '10.0.0.5')
@@ -15,8 +15,8 @@ POSTGRES_USER = os.getenv('POSTGRES_USER', 'sa')
 POSTGRES_PWD = os.getenv('POSTGRES_PWD', 'sa')
 POSTGRES_URL = f'jdbc:postgresql://{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}'
 
+
 def write_dataframe_to_postgres(df, table, mode):
-    #print(f'postgres url: {POSTGRES_URL}')
     df = df.withColumn('incident_datetime', Func.to_timestamp(df.incident_datetime, format='YYYY/MM/DD HH24:MI:SS PM'))
     df = df.withColumn('incident_date', Func.to_timestamp(df.incident_date, format='YYYY/MM/DD'))
     df = df.withColumn('incident_time', Func.to_timestamp(df.incident_time, format='HH24:MI'))
@@ -37,8 +37,8 @@ def write_dataframe_to_postgres(df, table, mode):
         'driver': 'org.postgresql.Driver'
     })
 
+
 def write_dataframe_to_postgres2(df, table, mode):
-    #print(f'postgres url: {POSTGRES_URL}')
     df = df.withColumn('listing_id', df.listing_id.cast('INT'))
     df = df.withColumn('id', df.id.cast('INT'))
     df = df.withColumn('date', Func.to_timestamp(df.date, format='YYYY-MM-DD'))
@@ -52,6 +52,7 @@ def write_dataframe_to_postgres2(df, table, mode):
         'password': POSTGRES_PWD,
         'driver': 'org.postgresql.Driver'
     })
+
 
 def write_events_to_postgres(file):
     df = spark_sql(app="store-events-to-db").read.parquet(file)
