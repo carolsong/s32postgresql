@@ -17,7 +17,8 @@ SCHEMA = StructType([
 
 
 def process():
-    source = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../data/reviews2.csv")
+    source = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                          "/Users/libosong/desktop/data/brandnew/airbnb/localtest/sample.csv")
     analyser = SentimentIntensityAnalyzer()
     score = analyser.polarity_scores("I don't like this place")['compound']
     score = analyser.polarity_scores("So much noise! I really have a negative impression")['compound']
@@ -41,7 +42,7 @@ def process():
     df.createOrReplaceTempView("reviews")
 
     sql = """
-        SELECT id, listing_id, reviewer_name, comments FROM reviews 
+        SELECT id,name FROM reviews 
     """
     spark.sql(sql).show()
 
